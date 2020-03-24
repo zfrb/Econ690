@@ -9,6 +9,9 @@
 rm(list=ls())
 ### Writing crra utility function 
 
+#//comments
+# perfect
+
 crra = function(c, theta) 
 {
   ifelse(abs(theta-1)<0.01, log(c), c^(1-theta)/(1-theta))
@@ -67,6 +70,7 @@ colnames(table1) = c("L1P1","L1P2","L2P1","L2P2")
 # P1 = P2 = 0.5 for both lottary 1 and 2.
 
 # expected utility function taking a choice of gamble, risk aversion as inputs
+# THIS IS VERY CONFUSING NAMING!! 
 exp_crra = function(param, theta)
 {
   out = 0.5*crra(param[1], theta) + 0.5*crra(param[2], theta)
@@ -110,18 +114,22 @@ for(num in 1:25)    # there are 25 gambles.
 
 indifference_thetas
 
+# THis works well. Well done. 
+
 
 ### Use turning points to construct identified sets for each set of lotteries.
 
 ### Use these identified sets along with dat_choice 
 # to construct the distribution of risk aversion in the population for each list of questions.
 
+## MISSING
+
+
 # =========================================================================#
 # Exercise 3 Part 3 
 # =========================================================================#
 
 # 1. Likelihood function associated to least risky lottery
-
 Llike3 = function(ydata, theta, sig = 1)
 {
   #assuming that sigma = 1
@@ -131,6 +139,7 @@ Llike3 = function(ydata, theta, sig = 1)
   for (iX in 1:nrow(table1))
   {
     expU    = crra(w+table1[iX,],rep(theta,nc))
+    # THIS IS MY CODE.. YOU have defined exp_CRRA higher
     pr[iX]  = pnorm((expU[1]+expU[2])/2-(expU[3]+expU[4])/2, sig)
   }
   pr[pr<0.00001] = 0.00001;
@@ -142,6 +151,9 @@ Llike3 = function(ydata, theta, sig = 1)
 # 2.
 grid1 = seq(-2,2,0.01)
 library(haven)
+setwd("Dropbox/Teaching/2020/Methods/Assignment/A4")
+dat_choices = read_dta("dat_choices.dta")   # rows are individuals and columns are choices.
+
 dat_choices = read_dta("dat_choices (1).dta")   # rows are individuals and columns are choices.
 
 # creating the vectors of choices for individuals 900 and 115.
@@ -158,6 +170,9 @@ for(theta in grid1)
   L115[i] = Llike3(y115, theta)
   i = i + 1
 }
+
+# this works, but this is very bad coding - something better
+out900 = sapply(X=grid1, FUN = Llike3,ydata=dat_choices[900,])
 
 plot(grid1,L900)
 plot(grid1,L115)
@@ -185,6 +200,9 @@ beale = function(param)
 values_x_y = expand.grid(seq(-5, 5, 0.01), seq(-5,5,0.01))
 
 z = beale(values_x_y)
+# Seems to produce something.. but what is it? You take a function that takes as input a vector and you supply a matrix.. 
+# I have no idea what R is doing!!!! 
+# cbind(values_x_y,apply(values_x_y,1,beale))
 
 beale_values = cbind(values_x_y, z)
 
@@ -239,7 +257,6 @@ gradient = function(vec)
 }
 
 # custom steepest descent function to find the minimum of Banana
-
 B_steep = function(x0, tol = 0.000001, maxIter = 1000)
 {
   diff = 1      # Initialize the difference
@@ -253,6 +270,14 @@ B_steep = function(x0, tol = 0.000001, maxIter = 1000)
     # find the optimal scaling parameter
     fPrime = NULL
     xPrime = NULL
+    # in the spirit this is wrong.. 
+    # what you want to do is 
+    # evaluate various x1 for different values of alpha.. just like here 
+    #val = sapply(X = alphaVec, FUN = line_search, vals=x0)
+    # then select the scaling parameter that gives the max step increase
+    #alpha = alphaVec[which(val==min(val))]
+    # then update 
+    # start = start - alpha*deriv
     for (iX in 1:length(alpha_vec))
     {
     x1 = x0 - alpha_vec[iX]*dx
@@ -277,6 +302,7 @@ return(a)
 
 # =========================================================================#
 # Exercise 6 Part 6
+# this is exactly what I expected... 
 # =========================================================================#
 library(sjmisc)
 library(AER)
@@ -357,6 +383,7 @@ Llike7 = function(p)
   return(-sum(logLik));  # because algorithms do minimization and we want to maximization.
 }
 
+# this take forever on my computer.. You need to set things like max iteration.. 
 I = isres(c(2.1, 0.8), Llike7, lower = c(0, 0), upper = c(15, 15))  
 L = lbfgs(c(2.1, 0.8), Llike7, lower = c(0, 0), upper = c(15, 15))
 B = bobyqa(c(2.1, 0.8), Llike7, lower = c(0, 0), upper = c(15, 15))
@@ -374,7 +401,7 @@ for(i in 1:nrow(dat_choices)){
   ydata = dat_choices[i,]
   B = bobyqa(c(2.1, 0.8), Llike7, lower = c(0, 0), upper = c(15, 15))
   r7[i] = B$par[1]
-  sig7[i] = L$par[2]
+  sig7[i] = L$par[2] #typo probably
   print(i)
 }
 
@@ -421,6 +448,7 @@ for(g in gambles)
   for(r in grid_r)
   {
     probs[r_num, g] = pnorm(exp_value_diff(g, w, r), sd = 0.5)
+    # I am really not a big fan of sneaking iterators in a loop.. Double looping will be more efficient in any matrix based language
     r_num = r_num +1
   }
 }
@@ -469,7 +497,6 @@ for(g in gambles)
 
 #c.# Estimate risk aversion and standard deviation using y_sim
 # using likelihood function at Part 7
-
 ydata = y_sim
 
 I_8c = isres(c(2.1, 0.8), Llike7, lower = c(0, 0), upper = c(15, 15))  
@@ -549,6 +576,14 @@ for(i in 1:nrow(grid_par))
 
 r_8.3
 sig_8.3
+
+# overall this part is really hard to follow...
+# starting a piece code with a general feel - WHat I am doing here would have helped..
+# ALL our estimates under bobyqa hit the bound.. Which is a sign that there is computing problem.. 
+# I would have organized this into a single function.. that calls
+  # simulateData = function(t, s, choicerow, w=wealth) {
+  # myLikelihood = function(params, ydat, choiceSet=choice, w=wealth) {
+  # estimateLikelihood = function(person, start=myParams, choiceSet = choice, w=wealth) {
 
 
 #==========================================================================#
