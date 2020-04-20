@@ -1,4 +1,5 @@
 
+?`Rcpp-package`
 
 rm(list=ls())
 
@@ -187,8 +188,68 @@ par(mfrow=c(1,3))
 plot(w, offer_cdf, ylim = range(0,1))
 plot(w, offer_cdf)
 plot(w, offer_pdf)    # all values are negative here
+##########################################################
+# 2. 
+reserv_wage = function(phi)
+{
+  w = dat$income
+  w_bar = max(w)
+  select_wage = which(w>=phi)
+  
+  nn = length(w)/3
+  hh = (w_bar - phi)/nn
+  
+  lambda_e = 0.5
+  lambda_u = 2
+  diff = lambda_u - lambda_e
+  r = 0.01
+  delt = 0.2
+  
+  f1 = leisure - phi
+  f2 = function(x)
+    {
+     F_bar = (delt/ecdf(vecX=select_wage, x0=x) - delt)/lambda_e
+     R = F_bar/(r+delt+lambda_e*F_bar)
+     return(R)
+    }
+  
+  vecc = vector()
+  for(i in nn)
+  {
+    x = phi + i*hh
+    if(x < w_bar) {vecc[i] = f2(x)}
+    else break    
+  }
+  
+  Trpz_integral = hh*((f2(w_bar) + f2(phi))/2 + sum(vecc))
+    
+  Obj_funct = f1 + diff * Trpz_integral
+  return(Obj_funct)
+}
+
+maxx = max(w)
+minn = min(w)
+
+leisure = 4000
+U = uniroot(reserv_wage, lower = minn, upper =  maxx)
+reserv_wage(U$root)
+
+
+# Exercise 5 Indirect Inference
+
+# 1. 
+library(sjmisc)
+
+marital = to_dummy(dat[,"marital"])
+colnames(marital) = c("married", "single" , "widowed" ,"divorced", "separated")
+dat = cbind(dat, marital)
+
+reg = glm(income ~ kids + meducation + married + single + widowed +  divorced, data = dat)
+summary(reg)
+err = residuals(reg)
+coeffs = coefficients(reg)
+sig = sd(err)
+
+theta_data = c(coeffs, sig)
 
 # 2. 
-
-
-
