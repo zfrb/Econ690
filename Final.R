@@ -354,7 +354,7 @@ theta_model = c(coeffs_sim, sd_e_sim=sd_e_sim)
 # 3. Minimization problem
 n = 675     # number of indivduals
 steps = 10  # number of simulations
-thetaModel = function(t0)
+obj_F = function(t0)
 {
   phi = vector()
   
@@ -386,19 +386,12 @@ thetaModel = function(t0)
   
   theta_model = c(coeffs_sim, sd_e_sim=sd_e_sim)
   theta_model = as.matrix(theta_model)
-  return(theta_model)
+  theta_data = as.matrix(theta_data)
+  
+  return(t(thetaModel(t0)-theta_data) %*% (thetaModel(t0)-theta_data))
 }
 
-theta_data = as.matrix(theta_data)
-
-obj = function(t0)
-{
-  A = t(thetaModel(t0)-theta_data) %*% (thetaModel(t0)-theta_data)
-  return(A)
-}
-
-t0 = theta_0
-optm = bobyqa(t0, obj)
+optm = bobyqa(theta_0, obj_F)
 
 optimized_pars = optm$par
 
@@ -416,14 +409,13 @@ boot = function(samplesize, bootNum, simNum)
     theta_data = as.matrix(theta_data)
     
     #2  estimate theta_model for samples 
-    thetaModel = function(t0){
+    Model_Obj = function(t0){
       n = samplesize
       steps = simNum
       dat = datB
-      thetaModel(t0)
+      obj_F(t0)
     }
-    t0 = theta_0
-    OPT = bobyqa(t0, obj)
+    OPT = bobyqa(theta_0, Model_Obj)
     theta_model = OPT$par
     M[i,] = theta_model 
   }
