@@ -360,7 +360,7 @@ obj_F = function(t0)
   
   for (j in 1:n) 
   {
-    e = rnorm(steps, sd=t0["sd_e"])
+    e = rnorm(steps, sd=2500)
     b0 = vector()
     phi0 = vector()
     for (i in 1:steps) 
