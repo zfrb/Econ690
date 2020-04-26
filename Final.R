@@ -388,7 +388,7 @@ obj_F = function(t0)
   theta_model = as.matrix(theta_model)
   theta_data = as.matrix(theta_data)
   
-  return(t(thetaModel(t0)-theta_data) %*% (thetaModel(t0)-theta_data))
+  return(t(theta_model-theta_data) %*% (theta_model-theta_data))
 }
 
 optm = bobyqa(theta_0, obj_F)
